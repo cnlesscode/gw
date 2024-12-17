@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cnlesscode/goWatcher/tools"
+	"github.com/cnlesscode/gw/tools"
 	"github.com/fsnotify/fsnotify"
 )
 

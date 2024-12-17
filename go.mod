@@ -1,4 +1,4 @@
-module github.com/cnlesscode/goWatcher
+module github.com/cnlesscode/gw
 
 go 1.23.1
 
