@@ -11,11 +11,22 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+var (
+	// 版本号
+	Version = "v1.0.6"
+)
+
 func main() {
-	// 安装到系统目录
-	if len(os.Args) > 1 && os.Args[1] == "install" {
-		tools.Install()
-		return
+
+	// 命令参数
+	if len(os.Args) > 1 {
+		if os.Args[1] == "install" {
+			tools.Install()
+			return
+		} else if os.Args[1] == "v" || os.Args[1] == "version" {
+			println("GW " + Version)
+			return
+		}
 	}
 
 	// 文件监听
