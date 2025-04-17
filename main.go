@@ -13,7 +13,7 @@ import (
 
 var (
 	// 版本号
-	Version = "v1.0.6"
+	Version = "v1.0.8"
 )
 
 func main() {
@@ -36,22 +36,19 @@ func main() {
 	}
 	defer watcher.Close()
 
+	// 上一个事件
+	var lastEvent fsnotify.Event = fsnotify.Event{}
+
 	// 启动监听协程
 	go func() {
-		// 防止重复编译
-		lastBuild := time.Now()
+		time.Sleep(time.Second * 5)
 		for {
 			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-
-				// 重命名
+			// 有文件变化
+			case event := <-watcher.Events:
 				if event.Op&fsnotify.Rename == fsnotify.Rename {
 					watcher.Add(event.Name)
 				}
-
 				// 新建目录
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					// 添加监听
@@ -60,34 +57,29 @@ func main() {
 						log.Printf("› 新增目录监听: %s\n", event.Name)
 					}
 				}
-
 				// 只处理 .go 文件的变化
 				if !strings.HasSuffix(event.Name, ".go") {
 					continue
 				}
-
 				// 文件保存事件
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					// 防止短时间内多次触发
-					if time.Since(lastBuild).Seconds() < 1 {
-						continue
-					}
-					lastBuild = time.Now()
+					lastEvent = event
 					log.Printf("› 检测到文件变化: %s\n", event.Name)
-
+				}
+			// 没有变化
+			default:
+				time.Sleep(time.Second * 2)
+				if lastEvent.Name != "" {
 					// 终止之前的进程
 					tools.KillProcess()
-
 					// 重新编译并运行
 					tools.BuildAndRun()
+					// 重置上一次事件
+					lastEvent.Name = ""
+					time.Sleep(time.Second * 2)
 				}
-
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("✘ 监听错误:", err)
 			}
+
 		}
 	}()
 
